@@ -415,22 +415,11 @@ async function handleSubmit() {
 
     // PDF存雲端硬碟這件事很慢，故意放在畫面顯示完AI回饋「之後」才呼叫，
     // 不 await、不管成敗都不影響學員畫面（失敗了也不會讓學員看到任何錯誤，避免不必要的困惑）。
-    // 這裡刻意用 POST 而不是 GET網址帶參數：因為AI回饋內容通常有一兩百字，加上完整答案，
-    // 塞進網址容易超過瀏覽器網址長度限制導致請求根本發不出去，POST放在請求內容裡沒有這個限制。
-    fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action: 'generatePdf',
-        caseId: caseData.caseId,
-        empId, empName,
-        caseTitle: resultData.caseTitle,
-        studentLine: resultData.studentLine,
-        answers: resultData.items,
-        feedback: resultData.feedback
-      })
-    }).catch(() => {
-      // 背景任務，失敗就算了，承辦人可以之後自行去雲端硬碟資料夾抽查有沒有缺漏
+    // 這裡只帶 caseId+empId 兩個小參數用 GET（後端會自己回頭去讀交卷紀錄裡的完整內容），
+    // 刻意不用 POST，因為 Apps Script 對 POST 的轉址機制比較容易不穩定，這個之前已經在「送出答案」那步踩過一次坑了。
+    const pdfParams = new URLSearchParams({ action: 'generatePdf', caseId: caseData.caseId, empId, _t: Date.now() });
+    fetchWithRetry(`${API_URL}?${pdfParams.toString()}`, { cache: 'no-store' }).catch(() => {
+      // 背景任務，重試過還是失敗就算了，承辦人可以之後自行去雲端硬碟資料夾抽查有沒有缺漏
     });
   } catch (err) {
     submitting = false;
