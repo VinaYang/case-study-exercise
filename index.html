@@ -260,10 +260,22 @@ function renderBackgroundBlocks(blocks) {
   }).join('');
 }
 
+// 遇到暫時性的網路狀況（例如 Apps Script 偶發的瞬間不穩）自動重試，不用讓學員自己手動重試
+async function fetchWithRetry(url, options, retries = 2, delayMs = 1000) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetch(url, options);
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise(resolve => setTimeout(resolve, delayMs * (attempt + 1)));
+    }
+  }
+}
+
 // ===== 載入個案內容 =====
 async function loadCase() {
   try {
-    const res = await fetch(`${API_URL}?action=getCase`);
+    const res = await fetchWithRetry(`${API_URL}?action=getCase`);
     const data = await res.json();
     if (!data.found) {
       app.innerHTML = `<div class="error-msg">${escapeHtml(data.message || '目前沒有啟用中的個案，請聯繫訓練承辦人。')}</div>`;
@@ -376,7 +388,7 @@ async function handleSubmit() {
       empId, empName, empUnit,
       answers: JSON.stringify(answers)
     });
-    const res = await fetch(`${API_URL}?${params.toString()}`);
+    const res = await fetchWithRetry(`${API_URL}?${params.toString()}`);
     const data = await res.json();
 
     if (data.error || !data.success) {
