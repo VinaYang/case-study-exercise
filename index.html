@@ -114,6 +114,19 @@
   .bar.gold { background: #B8912F; }
   .card-heading h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
   .card p { margin: 0; font-size: 14px; line-height: 1.9; color: #4A463D; }
+  .card p + p { margin-top: 14px; }
+
+  .quote-block {
+    background: var(--field-bg); border: 1px solid var(--card-border); border-radius: 10px;
+    padding: 14px 16px; margin-top: 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .quote-head { display: flex; align-items: center; gap: 8px; }
+  .quote-avatar {
+    width: 24px; height: 24px; border-radius: 999px; background: var(--accent); color: #fff;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .quote-speaker { font-size: 12px; font-weight: 700; color: var(--accent); }
+  .quote-text { margin: 0 0 0 32px; font-size: 14px; line-height: 1.8; color: #4A463D; font-style: italic; }
 
   .field-grid {
     display: grid;
@@ -223,6 +236,26 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// 個案背景現在是結構化的 block 陣列（段落／引言），這裡依 type 渲染成不同樣式
+function renderBackgroundBlocks(blocks) {
+  if (!Array.isArray(blocks) || blocks.length === 0) return '';
+  return blocks.map(b => {
+    if (b.type === 'quote') {
+      const initial = (b.speaker || '?').charAt(0);
+      return `
+        <div class="quote-block">
+          <div class="quote-head">
+            <div class="quote-avatar">${escapeHtml(initial)}</div>
+            <span class="quote-speaker">${escapeHtml(b.speaker || '')}${b.role ? `（${escapeHtml(b.role)}）` : ''}</span>
+          </div>
+          <p class="quote-text">「${escapeHtml(b.text)}」</p>
+        </div>
+      `;
+    }
+    return `<p>${escapeHtml(b.text)}</p>`;
+  }).join('');
+}
+
 // ===== 載入個案內容 =====
 async function loadCase() {
   try {
@@ -272,7 +305,7 @@ function renderForm() {
     <div id="case-panel" style="display: ${activeTab === 'case' ? 'block' : 'none'};">
       <div class="card" style="margin-bottom: 24px;">
         <div class="card-heading"><div class="bar"></div><h2>個案背景</h2></div>
-        <p>${escapeHtml(caseData.background)}</p>
+        ${renderBackgroundBlocks(caseData.background)}
       </div>
       <div class="card gold" style="margin-bottom: 24px;">
         <div class="card-heading"><div class="bar gold"></div><h2>重點摘要</h2></div>
