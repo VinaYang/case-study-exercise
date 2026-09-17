@@ -266,7 +266,7 @@ function renderBackgroundBlocks(blocks) {
 }
 
 // 遇到暫時性的網路狀況（例如 Apps Script 偶發的瞬間不穩）自動重試，不用讓學員自己手動重試
-async function fetchWithRetry(url, options, retries = 2, delayMs = 1000) {
+async function fetchWithRetry(url, options, retries = 4, delayMs = 1500) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       return await fetch(url, options);
@@ -448,7 +448,13 @@ function renderResult() {
     : '';
 
   const bottomButtons = hasNext
-    ? `<div class="bottom-row"><span></span><button type="button" class="btn" id="next-case-btn">繼續下一個個案 →</button></div>`
+    ? `<div class="bottom-row">
+        <span></span>
+        <div style="display: flex; gap: 12px;">
+          <button type="button" class="btn" id="print-btn" style="background: var(--card-bg); color: var(--accent); border: 1.5px solid var(--accent);">下載 PDF（含回答與 AI 回饋）</button>
+          <button type="button" class="btn" id="next-case-btn">繼續下一個個案 →</button>
+        </div>
+      </div>`
     : `<div class="bottom-row">
         <button type="button" class="btn-secondary" id="back-btn">← 返回修改回答</button>
         <button type="button" class="btn" id="print-btn">下載 PDF（含回答與 AI 回饋）</button>
@@ -492,6 +498,8 @@ function renderResult() {
     ${bottomButtons}
   `;
 
+  document.getElementById('print-btn').onclick = () => window.print();
+
   if (hasNext) {
     document.getElementById('next-case-btn').onclick = () => {
       caseQueueIndex += 1;
@@ -504,7 +512,6 @@ function renderResult() {
       submitting = false;
       renderForm();
     };
-    document.getElementById('print-btn').onclick = () => window.print();
   }
 }
 
