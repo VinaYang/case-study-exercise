@@ -231,6 +231,11 @@ let view = 'form'; // 'form' | 'result'
 let submitting = false;
 let resultData = null;
 
+// 多個案依序完成：網址帶 ?cases=CASE001,CASE002 時才會用到，沒有帶就是空陣列、維持原本單一啟用個案的行為
+const caseQueue = (new URLSearchParams(window.location.search).get('cases') || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+let caseQueueIndex = 0;
+
 const ICON_CASE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>';
 const ICON_ANSWER = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg>';
 
@@ -274,14 +279,23 @@ async function fetchWithRetry(url, options, retries = 2, delayMs = 1000) {
 
 // ===== 載入個案內容 =====
 async function loadCase() {
+  app.innerHTML = `<div class="status-msg">載入個案內容中…</div>`;
+  const specificCaseId = caseQueue.length ? caseQueue[caseQueueIndex] : null;
+  const cacheBust = `&_t=${Date.now()}`; // 避免瀏覽器快取住舊的回應，每次都當成新請求
+  const url = specificCaseId
+    ? `${API_URL}?action=getCase&caseId=${encodeURIComponent(specificCaseId)}${cacheBust}`
+    : `${API_URL}?action=getCase${cacheBust}`;
   try {
-    const res = await fetchWithRetry(`${API_URL}?action=getCase`);
+    const res = await fetchWithRetry(url, { cache: 'no-store' });
     const data = await res.json();
     if (!data.found) {
       app.innerHTML = `<div class="error-msg">${escapeHtml(data.message || '目前沒有啟用中的個案，請聯繫訓練承辦人。')}</div>`;
       return;
     }
     caseData = data;
+    activeTab = 'case';
+    view = 'form';
+    submitting = false;
     renderForm();
   } catch (err) {
     app.innerHTML = `<div class="error-msg">個案內容載入失敗，請重新整理頁面再試一次。（${escapeHtml(err.message)}）</div>`;
@@ -437,10 +451,25 @@ function renderResult() {
 
   const fb = resultData.feedback;
 
+  const hasNext = caseQueue.length > 0 && caseQueueIndex < caseQueue.length - 1;
+  const isLastOfQueue = caseQueue.length > 0 && caseQueueIndex === caseQueue.length - 1;
+
+  const completionBanner = isLastOfQueue
+    ? `<div style="font-size: 13px; color: var(--accent); background: #EFF5F3; border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 16px;">🎉 這堂課的 ${caseQueue.length} 個個案都已完成！</div>`
+    : '';
+
+  const bottomButtons = hasNext
+    ? `<div class="bottom-row"><span></span><button type="button" class="btn" id="next-case-btn">繼續下一個個案 →</button></div>`
+    : `<div class="bottom-row">
+        <button type="button" class="btn-secondary" id="back-btn">← 返回修改回答</button>
+        <button type="button" class="btn" id="print-btn">下載 PDF（含回答與 AI 回饋）</button>
+      </div>`;
+
   app.innerHTML = `
     <div class="eyebrow">AI 回饋結果</div>
     <h1>${escapeHtml(resultData.caseTitle)}</h1>
     <div style="font-size: 13px; color: var(--muted);">${escapeHtml(resultData.studentLine)}</div>
+    ${completionBanner}
 
     <div class="card">
       <h2 style="margin: 0; font-size: 15px; font-weight: 600;">你的回答回顧</h2>
@@ -471,19 +500,23 @@ function renderResult() {
       </div>
     </div>
 
-    <div class="bottom-row">
-      <button type="button" class="btn-secondary" id="back-btn">← 返回修改回答</button>
-      <button type="button" class="btn" id="print-btn">下載 PDF（含回答與 AI 回饋）</button>
-    </div>
+    ${bottomButtons}
   `;
 
-  document.getElementById('back-btn').onclick = () => {
-    view = 'form';
-    activeTab = 'answer';
-    submitting = false;
-    renderForm();
-  };
-  document.getElementById('print-btn').onclick = () => window.print();
+  if (hasNext) {
+    document.getElementById('next-case-btn').onclick = () => {
+      caseQueueIndex += 1;
+      loadCase();
+    };
+  } else {
+    document.getElementById('back-btn').onclick = () => {
+      view = 'form';
+      activeTab = 'answer';
+      submitting = false;
+      renderForm();
+    };
+    document.getElementById('print-btn').onclick = () => window.print();
+  }
 }
 
 loadCase();
