@@ -204,8 +204,12 @@
   .bottom-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; }
 
   @media print {
-    .tabbar, .btn-row, .bottom-row .btn-secondary { display: none !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+    .tabbar, .btn-row, .bottom-row { display: none !important; }
     body { background: #fff; }
+    .page { max-width: 100%; padding: 0; }
+    .card, .quote-block { break-inside: avoid; }
+    .card.gold { break-before: auto; }
   }
 </style>
 </head>
