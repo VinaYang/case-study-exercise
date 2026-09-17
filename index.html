@@ -366,7 +366,7 @@ async function handleSubmit() {
   submitting = true;
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.textContent = 'AI 分析並產生留存紀錄中，請稍候……';
+  btn.textContent = 'AI 分析中，請稍候……';
   document.getElementById('submit-error').innerHTML = '';
 
   try {
@@ -386,6 +386,21 @@ async function handleSubmit() {
     resultData = data;
     view = 'result';
     renderResult();
+
+    // PDF存雲端硬碟這件事很慢，故意放在畫面顯示完AI回饋「之後」才呼叫，
+    // 不 await、不管成敗都不影響學員畫面（失敗了也不會讓學員看到任何錯誤，避免不必要的困惑）
+    const pdfParams = new URLSearchParams({
+      action: 'generatePdf',
+      caseId: caseData.caseId,
+      empId, empName,
+      caseTitle: resultData.caseTitle,
+      studentLine: resultData.studentLine,
+      answers: JSON.stringify(resultData.items),
+      feedback: JSON.stringify(resultData.feedback)
+    });
+    fetch(`${API_URL}?${pdfParams.toString()}`).catch(() => {
+      // 背景任務，失敗就算了，承辦人可以之後自行去雲端硬碟資料夾抽查有沒有缺漏
+    });
   } catch (err) {
     submitting = false;
     btn.disabled = false;
