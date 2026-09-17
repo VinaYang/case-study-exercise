@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>個案分析演練</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #F4F1EA;
+    --ink: #262420;
+    --muted: #8A8577;
+    --label: #6B6558;
+    --card-border: #E3DFD3;
+    --card-bg: #FFFFFF;
+    --field-bg: #FBFAF7;
+    --field-border: #DCD7C9;
+    --accent: #2F6F68;
+    --accent-dark: #234F4A;
+    --gold-bg: #FBF8F0;
+    --gold-border: #E9E1C9;
+    --gold-text: #8A6D1F;
+    --tag-bg: #E4E9DA;
+    --tag-text: #3E5C3A;
+    --good: #3E5C3A;
+    --warn: #9C5A3C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Noto Sans TC", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  a { color: var(--accent); }
+  ::placeholder { color: #9C968A; }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .eyebrow {
+    font-family: "Noto Serif TC", serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0;
+    font-family: "Noto Serif TC", serif;
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+  .tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag {
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    font-weight: 500;
+  }
+
+  .tabbar {
+    display: flex;
+    gap: 8px;
+    padding: 6px;
+    background: #EFEBE0;
+    border-radius: 14px;
+    width: fit-content;
+  }
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+  }
+  .tab-btn.active {
+    border-color: var(--accent);
+    background: #FFFFFF;
+    color: var(--accent);
+  }
+  .tab-btn svg { flex-shrink: 0; }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .card.gold { background: var(--gold-bg); border-color: var(--gold-border); }
+  .card-heading { display: flex; align-items: center; gap: 8px; }
+  .bar { width: 4px; height: 18px; border-radius: 2px; background: var(--accent); flex-shrink: 0; }
+  .bar.gold { background: #B8912F; }
+  .card-heading h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
+  .card p { margin: 0; font-size: 14px; line-height: 1.9; color: #4A463D; }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--label); }
+  .field input, .field textarea {
+    font-family: inherit;
+    border: 1px solid var(--field-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--field-bg);
+  }
+  .field textarea { resize: vertical; line-height: 1.7; }
+
+  .q-card { gap: 14px; }
+  .q-head { display: flex; align-items: flex-start; gap: 12px; }
+  .q-no {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 999px;
+    background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .q-text { font-size: 15px; font-weight: 600; line-height: 1.6; }
+  .q-hint { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 4px; }
+
+  .btn {
+    font-family: inherit;
+    padding: 13px 32px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn:disabled { background: #B7C4C1; cursor: not-allowed; }
+  .btn-row { display: flex; justify-content: flex-end; }
+  .btn-secondary {
+    font-family: inherit;
+    background: none;
+    border: none;
+    color: var(--label);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 0;
+  }
+
+  .status-msg { font-size: 14px; color: var(--muted); padding: 40px 0; text-align: center; }
+  .error-msg { font-size: 14px; color: var(--warn); padding: 20px 24px; background: var(--gold-bg); border: 1px solid var(--gold-border); border-radius: 12px; }
+
+  .recap-row { display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid #EFEBE0; }
+  .recap-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .recap-q { font-size: 13px; font-weight: 600; color: #4A463D; }
+  .recap-a { font-size: 13px; line-height: 1.7; color: var(--label); }
+
+  .type-badge {
+    font-size: 15px; font-weight: 700; padding: 5px 16px; border-radius: 999px;
+    background: var(--accent); color: #fff; display: inline-block;
+  }
+  .fb-row { display: flex; flex-direction: column; gap: 4px; }
+  .fb-label { font-size: 12px; font-weight: 600; color: var(--label); }
+  .fb-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 560px) { .fb-two-col { grid-template-columns: 1fr; } }
+  .fb-strength .fb-label { color: var(--good); }
+  .fb-blindspot .fb-label { color: var(--warn); }
+  .fb-divider { padding-top: 6px; border-top: 1px solid var(--gold-border); }
+
+  .bottom-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; }
+
+  @media print {
+    .tabbar, .btn-row, .bottom-row .btn-secondary { display: none !important; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page" id="app">
+  <div class="status-msg" id="initial-loading">載入個案內容中…</div>
+</div>
+
+<script>
+// ===== 設定：換成你自己的 Apps Script Web App 網址 =====
+const API_URL = 'https://script.google.com/macros/s/AKfycbxRq7kWdmULRrUq-U22-Fe72ZknmeAERmtVzinVzFATJztBwSn6DaKs0qt5aQIMeoGaNw/exec';
+
+const app = document.getElementById('app');
+
+let caseData = null;
+let activeTab = 'case'; // 'case' | 'answer'
+let view = 'form'; // 'form' | 'result'
+let submitting = false;
+let resultData = null;
+
+const ICON_CASE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>';
+const ICON_ANSWER = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg>';
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+// ===== 載入個案內容 =====
+async function loadCase() {
+  try {
+    const res = await fetch(`${API_URL}?action=getCase`);
+    const data = await res.json();
+    if (!data.found) {
+      app.innerHTML = `<div class="error-msg">${escapeHtml(data.message || '目前沒有啟用中的個案，請聯繫訓練承辦人。')}</div>`;
+      return;
+    }
+    caseData = data;
+    renderForm();
+  } catch (err) {
+    app.innerHTML = `<div class="error-msg">個案內容載入失敗，請重新整理頁面再試一次。（${escapeHtml(err.message)}）</div>`;
+  }
+}
+
+// ===== 畫面：作答表單（個案內容 / 作答區域 分頁）=====
+function renderForm() {
+  const tagsHtml = caseData.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('');
+
+  const questionsHtml = caseData.questions.map(q => `
+    <div class="card q-card">
+      <div class="q-head">
+        <div class="q-no">${q.no}</div>
+        <div>
+          <div class="q-text">${escapeHtml(q.text)}</div>
+          <div class="q-hint">提示：${escapeHtml(q.hint)}</div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ans-${q.no}">你的回答</label>
+        <textarea id="ans-${q.no}" rows="4" placeholder="請描述你的處理方式與想法……"></textarea>
+      </div>
+    </div>
+  `).join('');
+
+  app.innerHTML = `
+    <div class="eyebrow">個案分析演練</div>
+    <h1>${escapeHtml(caseData.title)}</h1>
+    <div class="tags">${tagsHtml}</div>
+
+    <div class="tabbar">
+      <button type="button" class="tab-btn ${activeTab === 'case' ? 'active' : ''}" id="tab-case">${ICON_CASE} 個案內容</button>
+      <button type="button" class="tab-btn ${activeTab === 'answer' ? 'active' : ''}" id="tab-answer">${ICON_ANSWER} 作答區域</button>
+    </div>
+
+    <div id="case-panel" style="display: ${activeTab === 'case' ? 'block' : 'none'};">
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-heading"><div class="bar"></div><h2>個案背景</h2></div>
+        <p>${escapeHtml(caseData.background)}</p>
+      </div>
+      <div class="card gold" style="margin-bottom: 24px;">
+        <div class="card-heading"><div class="bar gold"></div><h2>重點摘要</h2></div>
+        <p>${escapeHtml(caseData.keypoint)}</p>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn" id="go-answer">閱讀完畢，前往作答 →</button>
+      </div>
+    </div>
+
+    <div id="answer-panel" style="display: ${activeTab === 'answer' ? 'flex' : 'none'}; flex-direction: column; gap: 24px;">
+      <div class="card field-grid" style="padding: 20px 24px;">
+        <div class="field"><label for="empId">工號</label><input id="empId" type="text" placeholder="請輸入工號"></div>
+        <div class="field"><label for="empName">姓名</label><input id="empName" type="text" placeholder="請輸入姓名"></div>
+        <div class="field"><label for="empUnit">所屬單位</label><input id="empUnit" type="text" placeholder="請輸入所屬單位"></div>
+      </div>
+      ${questionsHtml}
+      <div class="btn-row">
+        <button type="button" class="btn" id="submit-btn">送出回答，查看 AI 回饋</button>
+      </div>
+      <div id="submit-error"></div>
+    </div>
+  `;
+
+  document.getElementById('tab-case').onclick = () => { activeTab = 'case'; renderForm(); };
+  document.getElementById('tab-answer').onclick = () => { activeTab = 'answer'; renderForm(); };
+  document.getElementById('go-answer').onclick = () => { activeTab = 'answer'; renderForm(); };
+  document.getElementById('submit-btn').onclick = handleSubmit;
+}
+
+// ===== 送出答案 =====
+async function handleSubmit() {
+  const empId = document.getElementById('empId').value.trim();
+  const empName = document.getElementById('empName').value.trim();
+  const empUnit = document.getElementById('empUnit').value.trim();
+
+  if (!empId || !empName || !empUnit) {
+    document.getElementById('submit-error').innerHTML = `<div class="error-msg" style="margin-top: 8px;">請填寫工號、姓名、所屬單位後再送出。</div>`;
+    return;
+  }
+
+  const answers = caseData.questions.map(q => ({
+    no: q.no,
+    question: q.text,
+    answer: document.getElementById(`ans-${q.no}`).value.trim()
+  }));
+
+  const unanswered = answers.some(a => a.answer === '');
+  if (unanswered) {
+    document.getElementById('submit-error').innerHTML = `<div class="error-msg" style="margin-top: 8px;">請完成所有題目的回答後再送出。</div>`;
+    return;
+  }
+
+  submitting = true;
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'AI 分析並產生留存紀錄中，請稍候……';
+  document.getElementById('submit-error').innerHTML = '';
+
+  try {
+    const params = new URLSearchParams({
+      action: 'submit',
+      caseId: caseData.caseId,
+      empId, empName, empUnit,
+      answers: JSON.stringify(answers)
+    });
+    const res = await fetch(`${API_URL}?${params.toString()}`);
+    const data = await res.json();
+
+    if (data.error || !data.success) {
+      throw new Error(data.error || '未知錯誤');
+    }
+
+    resultData = data;
+    view = 'result';
+    renderResult();
+  } catch (err) {
+    submitting = false;
+    btn.disabled = false;
+    btn.textContent = '送出回答，查看 AI 回饋';
+    document.getElementById('submit-error').innerHTML = `<div class="error-msg" style="margin-top: 8px;">送出失敗，請再試一次。（${escapeHtml(err.message)}）</div>`;
+  }
+}
+
+// ===== 畫面：AI 整體回饋結果 =====
+function renderResult() {
+  const recapHtml = resultData.items.map(it => `
+    <div class="recap-row">
+      <div class="recap-q">Q${it.no}．${escapeHtml(it.question)}</div>
+      <div class="recap-a">${escapeHtml(it.answer)}</div>
+    </div>
+  `).join('');
+
+  const fb = resultData.feedback;
+
+  app.innerHTML = `
+    <div class="eyebrow">AI 回饋結果</div>
+    <h1>${escapeHtml(resultData.caseTitle)}</h1>
+    <div style="font-size: 13px; color: var(--muted);">${escapeHtml(resultData.studentLine)}</div>
+
+    <div class="card">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600;">你的回答回顧</h2>
+      ${recapHtml}
+    </div>
+
+    <div class="card gold" style="gap: 18px;">
+      <div class="card-heading"><div class="bar gold"></div><span style="font-size: 14px; font-weight: 700; color: var(--gold-text); letter-spacing: 1px;">整體 AI 回饋</span></div>
+
+      <div class="fb-row">
+        <div class="fb-label">綜合各題的回答，觀察到</div>
+        <p>${escapeHtml(fb.observation)}</p>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 12px; color: var(--label);">整體傾向較接近</span>
+        <span class="type-badge">${escapeHtml(fb.typeLabel)}</span>
+      </div>
+
+      <div class="fb-two-col">
+        <div class="fb-row fb-strength"><div class="fb-label">優點</div><p style="font-size:13px;">${escapeHtml(fb.strength)}</p></div>
+        <div class="fb-row fb-blindspot"><div class="fb-label">可能的盲點</div><p style="font-size:13px;">${escapeHtml(fb.blindspot)}</p></div>
+      </div>
+
+      <div class="fb-row fb-divider">
+        <div class="fb-label">建議方向</div>
+        <p style="font-size:13px;">${escapeHtml(fb.suggestion)}</p>
+      </div>
+    </div>
+
+    <div class="bottom-row">
+      <button type="button" class="btn-secondary" id="back-btn">← 返回修改回答</button>
+      <button type="button" class="btn" id="print-btn">下載 PDF（含回答與 AI 回饋）</button>
+    </div>
+  `;
+
+  document.getElementById('back-btn').onclick = () => {
+    view = 'form';
+    activeTab = 'answer';
+    submitting = false;
+    renderForm();
+  };
+  document.getElementById('print-btn').onclick = () => window.print();
+}
+
+loadCase();
+</script>
+
+</body>
+</html>
