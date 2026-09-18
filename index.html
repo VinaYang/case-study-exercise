@@ -115,6 +115,11 @@
   .card-heading h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
   .card p { margin: 0; font-size: 15px; line-height: 2.1; letter-spacing: 0.02em; color: #4A463D; font-family: "Noto Serif TC", serif; max-width: 560px; }
   .card p + p { margin-top: 22px; }
+  .bg-heading {
+    font-family: "Noto Serif TC", serif; font-weight: 700; font-size: 16px; color: var(--accent);
+    margin: 28px 0 4px; padding-top: 20px; border-top: 1px solid var(--card-border);
+  }
+  .bg-heading:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 
   .quote-block {
     background: var(--field-bg); border: 1px solid var(--card-border); border-radius: 10px;
@@ -245,10 +250,13 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// 個案背景現在是結構化的 block 陣列（段落／引言），這裡依 type 渲染成不同樣式
+// 個案背景現在是結構化的 block 陣列（小標題／段落／引言），這裡依 type 渲染成不同樣式
 function renderBackgroundBlocks(blocks) {
   if (!Array.isArray(blocks) || blocks.length === 0) return '';
   return blocks.map(b => {
+    if (b.type === 'heading') {
+      return `<h3 class="bg-heading">${escapeHtml(b.text)}</h3>`;
+    }
     if (b.type === 'quote') {
       const initial = (b.speaker || '?').charAt(0);
       return `
