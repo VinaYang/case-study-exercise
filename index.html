@@ -425,11 +425,15 @@ async function handleSubmit() {
   document.getElementById('submit-error').innerHTML = '';
 
   try {
+    // 每次「按下送出」產生一組一次性識別碼；就算後面自動重試，這組id跟著同一個URL重送，
+    // 後端會認出「這是同一次送出」，不會重複跑AI、重複寫紀錄
+    const submissionId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const params = new URLSearchParams({
       action: 'submit',
       caseId: caseData.caseId,
       empId, empName, empUnit,
-      answers: JSON.stringify(answers)
+      answers: JSON.stringify(answers),
+      submissionId
     });
     const res = await fetchWithRetry(`${API_URL}?${params.toString()}`);
     const data = await res.json();
