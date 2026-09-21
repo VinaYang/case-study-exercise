@@ -201,8 +201,7 @@
   }
   .fb-row { display: flex; flex-direction: column; gap: 4px; }
   .fb-label { font-size: 12px; font-weight: 600; color: var(--label); }
-  .fb-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media (max-width: 560px) { .fb-two-col { grid-template-columns: 1fr; } }
+  .fb-two-col { display: flex; flex-direction: column; gap: 18px; }
   .fb-strength .fb-label { color: var(--good); }
   .fb-blindspot .fb-label { color: var(--warn); }
   .fb-divider { padding-top: 6px; border-top: 1px solid var(--gold-border); }
@@ -215,6 +214,11 @@
     body { background: #fff; }
     .page { max-width: 100%; padding: 0; }
     .quote-block, .recap-row, .fb-row, .fb-two-col { break-inside: avoid; }
+    /* Chrome 列印時沒辦法把 flex 容器攔腰分頁，會整塊被推到下一頁、留下大片空白。
+       這裡把卡片改回一般區塊排版，讓內容可以在合適的地方自然斷頁。 */
+    .card { display: block !important; }
+    .card > * + * { margin-top: 14px; }
+    .card-heading { display: flex !important; } /* 這個很小，維持flex沒差 */
   }
 </style>
 </head>
