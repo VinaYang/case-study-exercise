@@ -521,10 +521,12 @@ function renderResult() {
         <span class="type-badge">${escapeHtml(fb.typeLabel)}</span>
       </div>
 
+      ${(fb.strength || fb.blindspot) ? `
       <div class="fb-two-col">
-        <div class="fb-row fb-strength"><div class="fb-label">優點</div><p style="font-size:13px;">${escapeHtml(fb.strength)}</p></div>
-        <div class="fb-row fb-blindspot"><div class="fb-label">可能的盲點</div><p style="font-size:13px;">${escapeHtml(fb.blindspot)}</p></div>
+        ${fb.strength ? `<div class="fb-row fb-strength"><div class="fb-label">優點</div><p style="font-size:13px;">${escapeHtml(fb.strength)}</p></div>` : ''}
+        ${fb.blindspot ? `<div class="fb-row fb-blindspot"><div class="fb-label">可能的盲點</div><p style="font-size:13px;">${escapeHtml(fb.blindspot)}</p></div>` : ''}
       </div>
+      ` : ''}
 
       <div class="fb-row fb-divider">
         <div class="fb-label">建議方向</div>
