@@ -126,6 +126,18 @@
     flex-direction: column;
     gap: 24px;
   }
+  .split-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--accent);
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent);
+  }
+  .split-heading svg { flex-shrink: 0; }
   .jump-to-answer {
     display: none;
     text-align: center;
@@ -432,6 +444,7 @@ function renderForm() {
 
     <div class="split-layout">
       <div class="split-case">
+        <div class="split-heading">${ICON_CASE} 個案內容</div>
         ${roleBannerHtml}
         <div class="card">
           <div class="card-heading"><div class="bar"></div><h2>個案背景</h2></div>
@@ -444,6 +457,7 @@ function renderForm() {
       </div>
 
       <div class="split-answer" id="answer-panel">
+        <div class="split-heading">${ICON_ANSWER} 作答區域</div>
         <div class="card field-grid" style="padding: 20px 24px;">
           <div class="field"><label for="empId">工號</label><input id="empId" type="text" placeholder="請輸入工號"></div>
           <div class="field"><label for="empName">姓名</label><input id="empName" type="text" placeholder="請輸入姓名"></div>
