@@ -100,15 +100,15 @@
   .tab-btn svg { flex-shrink: 0; }
 
   /* 左右並排（個案內容固定在左邊、作答區域在右邊），取代原本的分頁切換 */
-  .page-split { max-width: 1160px; }
+  .page-split { max-width: 1440px; }
   .split-layout {
     display: flex;
     align-items: flex-start;
-    gap: 32px;
+    gap: 40px;
   }
   .split-case {
-    flex: 0 0 40%;
-    min-width: 0;
+    flex: 1 1 0;
+    min-width: 420px;
     position: sticky;
     top: 24px;
     max-height: calc(100vh - 48px);
@@ -117,10 +117,11 @@
     flex-direction: column;
     gap: 24px;
     padding-bottom: 4px;
+    padding-right: 4px;
   }
   .split-answer {
-    flex: 1;
-    min-width: 0;
+    flex: 1 1 0;
+    min-width: 420px;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -153,7 +154,7 @@
     font-weight: 700;
     color: var(--accent);
   }
-  @media (max-width: 860px) {
+  @media (max-width: 960px) {
     .page-split { max-width: 720px; }
     .split-layout { flex-direction: column; }
     .split-case {
@@ -161,9 +162,10 @@
       max-height: none;
       overflow-y: visible;
       flex: none;
+      min-width: 0;
       width: 100%;
     }
-    .split-answer { width: 100%; }
+    .split-answer { min-width: 0; width: 100%; }
     .jump-to-answer { display: block; }
   }
 
