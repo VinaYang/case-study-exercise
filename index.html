@@ -525,17 +525,26 @@ async function handleSubmit() {
   document.getElementById('submit-error').innerHTML = '';
 
   try {
-    // 每次「按下送出」產生一組一次性識別碼；就算後面自動重試，這組id跟著同一個URL重送，
+    // 每次「按下送出」產生一組一次性識別碼；就算後面自動重試，這組id跟著同一次請求重送，
     // 後端會認出「這是同一次送出」，不會重複跑AI、重複寫紀錄
     const submissionId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-    const params = new URLSearchParams({
-      action: 'submit',
-      caseId: caseData.caseId,
-      empId, empName, empUnit,
-      answers: JSON.stringify(answers),
-      submissionId
+
+    // 改用 POST、把資料放在request body（不是塞進網址），因為回答內容變長之後，
+    // 塞進網址列的GET請求長度會超過Google那邊的網址長度上限，導致整台請求被擋掉、
+    // 回傳的不是我們要的JSON、而是Google的錯誤網頁（畫面上看到的「Unexpected token '<'」就是這樣來的）。
+    // Content-Type 刻意用 text/plain（不是 application/json），這樣瀏覽器不會在送出前先發一個
+    // CORS 預檢請求（preflight），因為 Apps Script 不支援回應預檢請求，用 application/json 會直接送不出去。
+    const res = await fetchWithRetry(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'submit',
+        caseId: caseData.caseId,
+        empId, empName, empUnit,
+        answers,
+        submissionId
+      })
     });
-    const res = await fetchWithRetry(`${API_URL}?${params.toString()}`);
     const data = await res.json();
 
     if (data.error || !data.success) {
