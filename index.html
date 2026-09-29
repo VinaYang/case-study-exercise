@@ -614,14 +614,14 @@ function renderResult() {
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 12px; color: var(--label);">整體傾向較接近</span>
+        <span style="font-size: 12px; color: var(--label);">團隊目前較接近</span>
         <span class="type-badge">${escapeHtml(fb.typeLabel)}</span>
       </div>
 
-      ${(fb.strength || fb.blindspot) ? `
-      <div class="fb-two-col">
-        ${fb.strength ? `<div class="fb-row fb-strength"><div class="fb-label">優點</div><p style="font-size:13px;">${escapeHtml(fb.strength)}</p></div>` : ''}
-        ${fb.blindspot ? `<div class="fb-row fb-blindspot"><div class="fb-label">可能的盲點</div><p style="font-size:13px;">${escapeHtml(fb.blindspot)}</p></div>` : ''}
+      ${fb.typeExplanation ? `
+      <div class="fb-row">
+        <div class="fb-label">團隊型態說明</div>
+        <p style="font-size:13px;">${escapeHtml(fb.typeExplanation)}</p>
       </div>
       ` : ''}
 
