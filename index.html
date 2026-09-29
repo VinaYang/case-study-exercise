@@ -525,26 +525,44 @@ async function handleSubmit() {
   document.getElementById('submit-error').innerHTML = '';
 
   try {
-    // 每次「按下送出」產生一組一次性識別碼；就算後面自動重試，這組id跟著同一次請求重送，
+    // 每次「按下送出」產生一組一次性識別碼；就算後面自動重試，這組id跟著同一次送出重送，
     // 後端會認出「這是同一次送出」，不會重複跑AI、重複寫紀錄
     const submissionId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
-    // 改用 POST、把資料放在request body（不是塞進網址），因為回答內容變長之後，
-    // 塞進網址列的GET請求長度會超過Google那邊的網址長度上限，導致整台請求被擋掉、
-    // 回傳的不是我們要的JSON、而是Google的錯誤網頁（畫面上看到的「Unexpected token '<'」就是這樣來的）。
-    // Content-Type 刻意用 text/plain（不是 application/json），這樣瀏覽器不會在送出前先發一個
-    // CORS 預檢請求（preflight），因為 Apps Script 不支援回應預檢請求，用 application/json 會直接送不出去。
-    const res = await fetchWithRetry(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
+    // 這裡原本試過改用 POST（把資料放在 request body），但 Apps Script 的網址背後有一層轉址機制，
+    // 瀏覽器對「POST + 轉址」的標準處理方式是自動把它改成 GET、並且把原本body的內容整個丟掉，
+    // 這樣送到後端時等於完全沒有帶資料，才會跳出「未知的 action」這種莫名其妙的錯誤，而且因為
+    // 是不是轉址要看Google那邊當下的狀況，所以才會「有時候」發生、不是每次都會出錯。
+    // 改回用 GET，但答案如果太長（塞進網址會超過長度上限），就切成一小段一小段先分批送到後端暫存，
+    // 全部送完之後再送一個「組合起來、正式送出」的請求，這樣不管答案多長都不會受網址長度限制影響。
+    const answersJson = JSON.stringify(answers);
+    const CHUNK_SIZE = 500; // 每段500個字，中文字經過網址編碼會膨脹成3倍多，這個大小送出後網址長度還算安全
+    const submitBaseParams = { caseId: caseData.caseId, empId, empName, empUnit, submissionId };
+    let res;
+
+    if (answersJson.length <= CHUNK_SIZE) {
+      // 答案不長，直接整包送出，不用分段，省幾次來回
+      const params = new URLSearchParams({ ...submitBaseParams, action: 'submit', answers: answersJson });
+      res = await fetchWithRetry(`${API_URL}?${params.toString()}`, { cache: 'no-store' });
+    } else {
+      // 答案太長，切成好幾段，一段一段送到後端暫存（一定要照順序、一段一段等前一段送完再送下一段，
+      // 不然後端收到的順序會亂掉）
+      const totalChunks = Math.ceil(answersJson.length / CHUNK_SIZE);
+      for (let i = 0; i < totalChunks; i++) {
+        const chunkData = answersJson.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        const chunkParams = new URLSearchParams({ action: 'uploadChunk', submissionId, idx: i, data: chunkData });
+        await fetchWithRetry(`${API_URL}?${chunkParams.toString()}`, { cache: 'no-store' });
+      }
+      // 全部段落都送完了，送最後這個請求告訴後端「段落到齊了，組起來正式處理」
+      const finalParams = new URLSearchParams({
+        ...submitBaseParams,
         action: 'submit',
-        caseId: caseData.caseId,
-        empId, empName, empUnit,
-        answers,
-        submissionId
-      })
-    });
+        answersChunked: '1',
+        totalChunks
+      });
+      res = await fetchWithRetry(`${API_URL}?${finalParams.toString()}`, { cache: 'no-store' });
+    }
+
     const data = await res.json();
 
     if (data.error || !data.success) {
